@@ -57,12 +57,60 @@ class AnwReader(anwstring: String){
 
     }
 
-    fun define_default_variable(string: String): String{
+    fun define_default_variable(string: String): Pair<String, MutableMap<String, String>>{
+        var temp1 : MutableMap<String, String> = mutableMapOf()
+        var temp_string = string
+        for (t in pattern_def_dvar.findAll(string)){
+            temp_string = temp_string.substring(0, t.range.first) + temp_string.substring(t.range.last, temp_string.length)
+
+            var temp_matched = Regex("""\{((?:.|[\n])*)\}""").replace(t.groupValues[1]) { m->m.groupValues[1]}
+            var temp_seped = temp_matched.split(';')
+            for (i in temp_seped){
+                if(i.trim() == ""){
+                    continue
+                }
+                var temp_seped_kv = i.split("=")
+                temp1[temp_seped_kv[0].trim()] = temp_seped_kv[1].trim()
+
+            }
+        }
+        
+        return Pair(temp_string, temp1)
+    }
+
+    fun define_variable(string: String): Pair<String, MutableMap<String, String>> {
+        return Pair(string, mutableMapOf())
+    }
+
+    fun define_stage(string: String): MutableMap<String, String>{
+        var seped_by_stage = pattern_def_stage_without_group.split(string)
+        var t = pattern_def_stage.findAll(string) as List<MatchResult>
+
         var temp1 : MutableMap<String, String> = mutableMapOf()
 
-        for (t in pattern_def_dvar.findAll(string)){
-            string = string[] // TODO: 어 저런
+        val ft = seped_by_stage[0].trim()
+        if (ft == ""){
+            temp1["main"] = ft
         }
+
+        if (seped_by_stage.size == 1) {
+            return temp1
+        }
+
+        //
+        seped_by_stage.subList(1, seped_by_stage.size).forEachIndexed {
+                i, st ->
+            if (st.trim() == "") {return@forEachIndexed}
+        else{
+                if (t[i].groupValues[1].trim() in temp1.keys){
+                    temp1[t[i].groupValues[1].trim()] += st.trim()
+                } else{
+                    temp1[t[i].groupValues[1].trim()] = st.trim()
+                }
+
+            }}
+
+        return temp1
 
 
     }
@@ -92,5 +140,4 @@ data class AnwElement(val emode: Int,
 fun main(){
     val t = pattern_ignore_bracket_right.find("\\}")
     print(t?.value)
-    Fil
 }
